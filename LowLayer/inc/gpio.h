@@ -7,7 +7,9 @@ typedef enum{
 
 typedef enum{
 	input,
-	output
+	output, 
+	alt_output, 
+	alt_input,
 }pin_mode_t;
 
 func_status_t gpio_init(GPIO_TypeDef* port, uint8_t pin_num, pin_mode_t pin_mode ); 

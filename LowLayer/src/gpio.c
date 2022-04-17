@@ -3,7 +3,8 @@
 func_status_t gpio_init( GPIO_TypeDef* port, uint8_t pin_num, pin_mode_t pin_mode ){
 	func_status_t ret= func_oke;
 	/* check parameters */
-	if((15u < pin_num) || ((pin_mode != input) && (pin_mode != output)) ){
+	if((15u < pin_num) || ((pin_mode != input) && (pin_mode != output) 
+		&& (pin_mode != alt_input) && (pin_mode != alt_output)) ){
 		ret= func_fail;
 	}
 	/* enable rcc */
@@ -25,13 +26,24 @@ func_status_t gpio_init( GPIO_TypeDef* port, uint8_t pin_num, pin_mode_t pin_mod
 			port->BSRR |= 1u << (pin_num + 16u);
 		}
 	}
+	else if( pin_mode == alt_output ){
+		rcc_enable(APB2 ,0U);
+		if( pin_num > 7u){
+			port->CRH &= ~(uint32_t)(0x0F << ((pin_num%8u)*4u));
+			port->CRH |= (uint32_t)(0x0B << ((pin_num%8u)*4u));
+		}
+		else{
+			port->CRL &= ~(uint32_t)(0x0F << (pin_num*4u));
+			port->CRL |= (uint32_t)(0x0B << (pin_num*4u));
+		}
+	}
 	
 	return ret;
 }
 func_status_t gpio_set_pin(GPIO_TypeDef* port, uint8_t pin_num, pin_state_t pin_state ){
 	func_status_t ret= func_oke;
 	/* check parameters */
-	if((15u < pin_num) || (pin_state != pin_high && (pin_state != pin_low)) ){
+	if((15u < pin_num) || (pin_state != pin_high && (pin_state != pin_low))){
 		ret= func_fail;
 	}
 	
@@ -52,9 +64,3 @@ func_status_t gpio_set_pin(GPIO_TypeDef* port, uint8_t pin_num, pin_state_t pin_
 	
 	return ret;
 }
-
-
-
-
-
-
