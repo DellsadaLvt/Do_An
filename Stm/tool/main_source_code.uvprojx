@@ -417,6 +417,21 @@
               <FileType>1</FileType>
               <FilePath>..\LowLayer\src\isr.c</FilePath>
             </File>
+            <File>
+              <FileName>uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\LowLayer\src\uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>glcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\LowLayer\src\glcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>systick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\LowLayer\src\systick.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

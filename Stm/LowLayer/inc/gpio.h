@@ -6,7 +6,7 @@ typedef enum{
 } pin_state_t;
 
 typedef enum{
-	input,
+	input = 0u,
 	output, 
 	alt_output, 
 	alt_input,
