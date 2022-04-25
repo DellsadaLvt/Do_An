@@ -1,6 +1,6 @@
 #include "rtc.h"
 
-volatile uint8_t u8g_RtcCount= 250u;
+volatile uint8_t u8g_RtcCount= 0u;
 
 static uint32_t setBit( uint8_t pos){
 	return ((uint32_t)0x01 << pos);
@@ -56,6 +56,10 @@ func_status_t delay(uint8_t time){
 	
 	if(255 < time)
 		ret= func_fail;
+	
+	if( u8g_RtcCount > 250u ){
+		u8g_RtcCount = 0u;
+	}
 	
 	if( ret != func_fail ){
 		uint8_t curent_count= u8g_RtcCount;

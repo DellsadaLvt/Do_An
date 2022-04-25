@@ -16,6 +16,11 @@ void SysTick_Handler( void ){
 void RTC_IRQHandler(){
 	if( (RTC->CRL & 0x01) && ( RTC->CRH & 0x01 ) ){
 		u8g_RtcCount += 1u;
+		
+	if( u8g_RtcCount > 250u ){
+		u8g_RtcCount = 0u;
+	}
+		
 		RTC->CRL &= ~0x01;
 	}
 }
@@ -50,7 +55,7 @@ void USART1_IRQHandler( void ){
 		/* check interrupts flag and enable interrupts enable */
 		if( ((USART1->SR>>5u)&0x01u) && ((USART1->CR1>>5u)&0x01u) ){
 			u8g_ReadUart1 = USART1->DR;
-			uart_Uart1Trasmit( (char*)&u8g_ReadUart1 );
+			//uart_Uart1Trasmit( (char*)&u8g_ReadUart1 );
 		}
 	}
 	/* reset all flag errors */

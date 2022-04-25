@@ -35,8 +35,7 @@ void uart_Uart1Trasmit(char *data)
 	/* set TE: transmit enable */
 	USART1->CR1 |= setTE;
 	/* wait Transmit data register empty */
-	while (!((USART1->SR >> 7) & (uint32_t)0x01))
-		;
+	while (!((USART1->SR >> 7) & (uint32_t)0x01));
 	/* start transfer */
 	for (uint8_t i = 0; i < strlen(data); i++)
 	{
