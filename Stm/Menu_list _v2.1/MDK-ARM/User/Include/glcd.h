@@ -44,8 +44,6 @@
 /* Using glcd gpio mode transfer */
 #define GLCD_GPIO
 
-/* Config gpio */
-HAL_StatusTypeDef glcd_GpioInit(void);
 
 /* General functions */
 HAL_StatusTypeDef glcd_Init( void );

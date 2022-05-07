@@ -63,15 +63,15 @@
 
 /* User config */
 #ifdef GLCD_GPIO
-	#define GLCD_CLK		((uint8_t)0u)
-	#define GLCD_DATA 		((uint8_t)1u)
-	#define GLCD_CLK_PORT 	(GPIOB)
-	#define GLCD_DATA_PORT 	(GPIOB)
+	#define GLCD_CLK				glcd_clk_Pin
+	#define GLCD_DATA 			glcd_data_Pin
+	#define GLCD_CLK_PORT 	glcd_clk_GPIO_Port
+	#define GLCD_DATA_PORT 	glcd_data_GPIO_Port
 #endif
 
 #ifndef GLCD_FUNC_GPIO
-	#define GLCD_CLK_SET(x)						gpio_set_pin(GLCD_CLK_PORT, GLCD_CLK, ((uint8_t)(x)>0?pin_high:pin_low))
-	#define GLCD_DATA_SET(x)					gpio_set_pin(GLCD_DATA_PORT, GLCD_DATA, ((uint8_t)(x)>0?pin_high:pin_low))
+	#define GLCD_CLK_SET(x)						HAL_GPIO_WritePin(GLCD_CLK_PORT, GLCD_CLK, ((uint8_t)(x)>0?GPIO_PIN_SET:GPIO_PIN_RESET))
+	#define GLCD_DATA_SET(x)					HAL_GPIO_WritePin(GLCD_DATA_PORT, GLCD_DATA, ((uint8_t)(x)>0?GPIO_PIN_SET:GPIO_PIN_RESET))
 	#define TRANSFER_BIT(data, bit) 	GLCD_DATA_SET((uint8_t)(data)&(uint8_t)(1u << (bit)))
 #endif
 
@@ -495,36 +495,36 @@ const unsigned char character_table[] = {
 	Mask functions
 */
 
-static func_status_t user_delay( uint32_t time ){
+static HAL_StatusTypeDef user_delay( uint32_t time ){
 	if( 0u == time )
-		return func_fail;
+		return HAL_ERROR;
 	
-	delay_ms(time);
+	HAL_Delay(time);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 #ifdef GLCD_USING_SPI
-static func_status_t CS_write_pin(state_out_t state){
+static HAL_StatusTypeDef CS_write_pin(state_out_t state){
 	if( state == set )
 			HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_SET);
 	else if( state == reset )
 			HAL_GPIO_WritePin(SPI2_CS_GPIO_Port, SPI2_CS_Pin, GPIO_PIN_RESET);
 	else
-		  return func_fail;
+		  return HAL_ERROR;
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t user_transmit(uint8_t data){
+static HAL_StatusTypeDef user_transmit(uint8_t data){
 	HAL_SPI_Transmit(&hspi2, &data, 1u, 100u);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 #else
 
-static func_status_t user_transmit(const uint8_t data){
+static HAL_StatusTypeDef user_transmit(const uint8_t data){
 	GLCD_CLK_SET(0U);
 	for(int8_t bit= 7; bit>= 0; bit-= 1u){
 		TRANSFER_BIT(data,bit);
@@ -532,7 +532,7 @@ static func_status_t user_transmit(const uint8_t data){
 		GLCD_CLK_SET(0U);
 	}
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 #endif
@@ -542,50 +542,50 @@ static func_status_t user_transmit(const uint8_t data){
 */
 
 
-static func_status_t glcd_command(const uint8_t data){
+static HAL_StatusTypeDef glcd_command(const uint8_t data){
 	user_transmit(COMMAND_KEY);
 	user_transmit((uint8_t)(data&0xF0));
 	user_transmit((uint8_t)(data<<4u));
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t glcd_data(const uint8_t data){
+static HAL_StatusTypeDef glcd_data(const uint8_t data){
 	user_transmit(DATA_KEY);
 	user_transmit((uint8_t)(data&0xF0));
 	user_transmit((uint8_t)(data<<4u));
 
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t glcd_func_set(void){
+static HAL_StatusTypeDef glcd_func_set(void){
 	glcd_command(BASIC_INSTRUCTION);
 	user_delay(1);
 	glcd_command(BASIC_INSTRUCTION);
 	user_delay(1);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t glcd_display_control(void){
+static HAL_StatusTypeDef glcd_display_control(void){
 	glcd_command(DISPLAY_CONTROL);
 	user_delay(1);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t glcd_end_init(void){
+static HAL_StatusTypeDef glcd_end_init(void){
 	/* entry mode set */
 	glcd_command(ENTRY_MODE_SET);
 	
 	/* Cursor display shift */
 	//glcd_command(0x10);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 
-static func_status_t glcd_user_CGRAM_init(void){
+static HAL_StatusTypeDef glcd_user_CGRAM_init(void){
 	glcd_command(EXTERNAL_INSTRUCTION);
 	user_delay(1u);
 	glcd_command(ENABLE_CGRAM_ADD);
@@ -593,18 +593,12 @@ static func_status_t glcd_user_CGRAM_init(void){
 	glcd_command(BASIC_INSTRUCTION);
 	user_delay(1u);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 /* Public functions */
-func_status_t glcd_GpioInit(void){
-	gpio_init(GLCD_CLK_PORT, GLCD_CLK, output);
-	gpio_init(GLCD_DATA_PORT, GLCD_DATA, output);
 
-	return func_oke;
-}
-
-func_status_t glcd_Init( void ){
+HAL_StatusTypeDef glcd_Init( void ){
 	user_delay(100u);
 	
 	glcd_func_set();
@@ -612,56 +606,56 @@ func_status_t glcd_Init( void ){
 	glcd_display_control();
 	glcd_end_init();
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 
 
-func_status_t glcd_entry_basic_mode( void ){
+HAL_StatusTypeDef glcd_entry_basic_mode( void ){
 	/* function external set */
 	glcd_command(BASIC_INSTRUCTION);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 
 #ifdef GLCD_USING_SPI
-func_status_t glcd_start(void){
+HAL_StatusTypeDef glcd_start(void){
 	/* enable device */
 	CS_write_pin(set);
 	user_delay(TIME_DELAY_DATA);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-func_status_t glcd_stop(void){
+HAL_StatusTypeDef glcd_stop(void){
 	/* enable device */
 	CS_write_pin(reset);
 	user_delay(TIME_DELAY_DATA);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 #endif
 
-func_status_t glcd_display_clear(void){
+HAL_StatusTypeDef glcd_display_clear(void){
 	glcd_command(LINE_0_BASE_DDRAM);
 	glcd_command(DISPLAY_CLEAR);
 	user_delay(20u);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-func_status_t glcd_basic_print_string(const uint8_t position, const uint8_t *const str, const uint8_t str_len){
+HAL_StatusTypeDef glcd_basic_print_string(const uint8_t position, const uint8_t *const str, const uint8_t str_len){
 	glcd_command(position);
 	for(uint8_t i=0u; i< str_len; i+=1u){
 		glcd_data(str[i]);
 	}
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-func_status_t glcd_test(void){
+HAL_StatusTypeDef glcd_test(void){
 	unsigned char str[] = "Le Van Tho";
 	unsigned char say[] = "hello world";
 	unsigned char digit[] = "0 1 2 3 4 5 6 78";
@@ -675,10 +669,10 @@ func_status_t glcd_test(void){
 	glcd_data(0xD7);
 	glcd_data(0x5e);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-func_status_t glcd_test_CGRAM(void){
+HAL_StatusTypeDef glcd_test_CGRAM(void){
 	glcd_user_CGRAM_init();
 	
 	glcd_command(0x40);   // 0x40 is the first line of the first address CGRAM
@@ -690,37 +684,37 @@ func_status_t glcd_test_CGRAM(void){
 	glcd_data(0);
 	glcd_data(0);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 /*
   ----------------	Graphic mode  ----------------
 */
 
-static func_status_t set_index_GDRAM( const uint8_t vertical, const uint8_t horizontal){
+static HAL_StatusTypeDef set_index_GDRAM( const uint8_t vertical, const uint8_t horizontal){
 	glcd_command(vertical);
 	glcd_command(horizontal);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t write_GDRAM( const uint8_t first_byte, const uint8_t second_byte){
+static HAL_StatusTypeDef write_GDRAM( const uint8_t first_byte, const uint8_t second_byte){
 	glcd_data(first_byte);
 	glcd_data(second_byte);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 #if 0
-static func_status_t print_test( uint8_t pos, uint8_t ver, uint8_t hor ){
+static HAL_StatusTypeDef print_test( uint8_t pos, uint8_t ver, uint8_t hor ){
 	for(uint8_t i=0u; i< 5u; i+=1u){
 		set_index_GDRAM(VERTICAL_ADDRESS_BASE + ver + i, HORIZONTAL_ADDRESS_BASE + hor);
 		write_GDRAM(text[pos*5u + i], 0u);
 	}
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_8digit( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table ){
+static HAL_StatusTypeDef print_using_8digit( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table ){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -764,13 +758,13 @@ static func_status_t print_using_8digit( const uint8_t vertical, const uint8_t h
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
 
 #endif
 
-static func_status_t print_using_8characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table ){
+static HAL_StatusTypeDef print_using_8characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table ){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -814,14 +808,14 @@ static func_status_t print_using_8characters( const uint8_t vertical, const uint
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
 
 
 
 
-static func_status_t print_using_7characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
+static HAL_StatusTypeDef print_using_7characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -864,10 +858,10 @@ static func_status_t print_using_7characters( const uint8_t vertical, const uint
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_6characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
+static HAL_StatusTypeDef print_using_6characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -908,10 +902,10 @@ static func_status_t print_using_6characters( const uint8_t vertical, const uint
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_5characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
+static HAL_StatusTypeDef print_using_5characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -943,10 +937,10 @@ static func_status_t print_using_5characters( const uint8_t vertical, const uint
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_4characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
+static HAL_StatusTypeDef print_using_4characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -977,12 +971,12 @@ static func_status_t print_using_4characters( const uint8_t vertical, const uint
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
 
 
-static func_status_t print_using_3characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
+static HAL_StatusTypeDef print_using_3characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -1011,10 +1005,10 @@ static func_status_t print_using_3characters( const uint8_t vertical, const uint
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_2characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line ){
+static HAL_StatusTypeDef print_using_2characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line ){
 	for(uint8_t i= 0u; i< 8u; i+=1u){
 		set_index_GDRAM(vertical + i , horizontal);
 		// write 2 characters and half character
@@ -1022,19 +1016,19 @@ static func_status_t print_using_2characters( const uint8_t vertical, const uint
 							 (character_table[(line_table[1u] - type_character + base_line)*8u + i] >> 6u),
 							 (character_table[(line_table[1u] - type_character + base_line)*8u + i] << 2u));
 	}
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_1characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line ){
+static HAL_StatusTypeDef print_using_1characters( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table, uint8_t type_character, uint8_t base_line ){
 	for(uint8_t i= 0u; i< 8u; i+=1u){
 		set_index_GDRAM(vertical + i , horizontal);
 		// write 1 characters 
 		write_GDRAM(character_table[(line_table[0u] - type_character + base_line)*8u + i], 0u);
 	}
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_3digit( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table){
+static HAL_StatusTypeDef print_using_3digit( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -1063,10 +1057,10 @@ static func_status_t print_using_3digit( const uint8_t vertical, const uint8_t h
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
-static func_status_t print_using_4digit( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table){
+static HAL_StatusTypeDef print_using_4digit( const uint8_t vertical, const uint8_t horizontal, const uint8_t *const line_table){
 	static uint8_t retain_data = 0u;
 	static uint8_t column = 0u;
 	for(uint8_t i= 0u; i< 8u; i+=1u){
@@ -1096,19 +1090,19 @@ static func_status_t print_using_4digit( const uint8_t vertical, const uint8_t h
 			break;
 	}
 		
-	return func_oke;
+	return HAL_OK;
 }
 
 
 
-func_status_t glcd_entry_graphic_mode( void ){
+HAL_StatusTypeDef glcd_entry_graphic_mode( void ){
 	/* function external set */
 	glcd_command(GRAPHIC_MODE);
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-func_status_t glcd_clear_graphic(void){
+HAL_StatusTypeDef glcd_clear_graphic(void){
 		uint8_t vertical_add = 0x80;
 		uint8_t horizontal_add = 0x80;
 	/* Above part */
@@ -1127,10 +1121,10 @@ func_status_t glcd_clear_graphic(void){
 			}
 		}
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-func_status_t glcd_print_image(const unsigned char *const image){
+HAL_StatusTypeDef glcd_print_image(const unsigned char *const image){
 	/* Above part: print arr components from 0 to 31  */
 	uint8_t axis_x = 0u;
 	uint8_t axis_y = 0u;
@@ -1151,12 +1145,12 @@ func_status_t glcd_print_image(const unsigned char *const image){
 			}
 		}
 	
-	return func_oke;
+	return HAL_OK;
 }
 
-func_status_t glcd_graphic_print_characters(const uint8_t vertical, const uint8_t horizontal, const uint8_t *str, unsigned char str_len){
+HAL_StatusTypeDef glcd_graphic_print_characters(const uint8_t vertical, const uint8_t horizontal, const uint8_t *str, unsigned char str_len){
 	if( (0u == str_len) || (NULL == str) )
-		return func_fail;
+		return HAL_ERROR;
 	
 	uint8_t offset = 0u;
 	while(str_len > 0u){
@@ -1213,13 +1207,13 @@ func_status_t glcd_graphic_print_characters(const uint8_t vertical, const uint8_
 		}
 	}
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 
-func_status_t glcd_graphic_print_digit(const uint8_t vertical, const uint8_t horizontal, const uint8_t *str, unsigned char str_len){
+HAL_StatusTypeDef glcd_graphic_print_digit(const uint8_t vertical, const uint8_t horizontal, const uint8_t *str, unsigned char str_len){
 	if( (0u == str_len) || (NULL == str) )
-		return func_fail;
+		return HAL_ERROR;
 	
 	uint8_t offset = 0u;
 	while(str_len > 0u){
@@ -1261,11 +1255,11 @@ func_status_t glcd_graphic_print_digit(const uint8_t vertical, const uint8_t hor
 	}
 }
 	
-	return func_oke;
+	return HAL_OK;
 }
 
 
-func_status_t glcd_test_graphic_mode(void){
+HAL_StatusTypeDef glcd_test_graphic_mode(void){
 	glcd_entry_graphic_mode();
 	glcd_clear_graphic();
 
