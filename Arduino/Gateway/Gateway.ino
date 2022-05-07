@@ -19,21 +19,21 @@ void setup() {
 
 void loop() {
   while (serial.available()) {
-    Serial.println("Data in");
-    // get the new byte:
+//     get the new byte:
     char inChar = (char)serial.read();
+    Serial.println(inChar);
     if (inChar == 's') {
       stringComplete = true;
     }
     else {
-      // add it to the inputString:
+//       add it to the inputString:
       inputString += inChar;
     }
   }
   if (stringComplete == true ) {
     if (inputString == "on") {
       digitalWrite(D4, LOW);
-      Serial.println("turn on led");
+      serial.println("turn on led");
     }
     else if (inputString == "off") {
       digitalWrite(D4, HIGH);
