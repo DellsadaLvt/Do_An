@@ -510,12 +510,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Drivers/User</GroupName>
+          <GroupName>Middleware</GroupName>
           <Files>
             <File>
               <FileName>glcd.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\glcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>com.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\com.c</FilePath>
             </File>
           </Files>
         </Group>

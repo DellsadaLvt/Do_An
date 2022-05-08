@@ -22,6 +22,7 @@
 "menu_list\stm32f1xx_hal_uart.o"
 "menu_list\system_stm32f1xx.o"
 "menu_list\glcd.o"
+"menu_list\com.o"
 --library_type=microlib --strict --scatter "Menu_list\Menu_list.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

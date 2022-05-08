@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "glcd.h"
+#include "com.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,6 +48,7 @@
 
 /* USER CODE BEGIN PV */
 extern const unsigned char logo[];
+extern uint8_t u8g_RxBuff;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,18 +92,8 @@ int main(void)
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	uint8_t msg[] = "Hello world";
-	glcd_Init();
-	glcd_display_clear();
-
-	glcd_entry_basic_mode();
-	glcd_basic_print_string(LINE_0_BASE_DDRAM, msg, strlen((char*)msg));
-	HAL_Delay(1000u);
-	glcd_display_clear();
-
-	glcd_entry_graphic_mode();
-	glcd_test_graphic_mode();
-	
+	HAL_Delay(15000u);
+	COM_TestReceiveFromEsp();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,10 +103,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		glcd_print_image(logo);
-		HAL_Delay(2000u);
-		glcd_clear_graphic();
-		HAL_Delay(2000u);
+		COM_TestCmdToEsp();
   }
   /* USER CODE END 3 */
 }

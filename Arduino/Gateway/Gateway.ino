@@ -1,4 +1,5 @@
 #include "SoftwareSerial.h"
+#include <string.h>
 
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
@@ -15,6 +16,10 @@ void setup() {
   inputString = "";
   stringComplete = false;
   Serial.println("Serial already");
+
+  char str[]= "hello##da";
+  char *token = NULL;
+  token = strcat(str, "##");
 }
 
 void loop() {
@@ -33,15 +38,15 @@ void loop() {
   if (stringComplete == true ) {
     if (inputString == "on") {
       digitalWrite(D4, LOW);
-      serial.println("turn on led");
+      serial.write("ens");
     }
     else if (inputString == "off") {
       digitalWrite(D4, HIGH);
-      Serial.println("turn off led");
+      serial.write("dis");
     }
     Serial.println(inputString);
     inputString = "";
     stringComplete = false;
   }
-  delay(20);
+  delay(20000);
 }
